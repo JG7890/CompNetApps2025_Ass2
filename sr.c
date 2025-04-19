@@ -56,9 +56,9 @@ bool IsCorrupted(struct pkt packet)
 
 /********* Sender (A) variables and functions ************/
 
-static struct pkt buffer[WINDOWSIZE];  /* array for storing packets waiting for ACK */
-static int windowfirst, windowlast;    /* array indexes of the first/last packet awaiting ACK */
-static int windowcount;                /* the number of packets currently awaiting an ACK */
+static struct pkt A_buffer[WINDOWSIZE];  /* array for storing packets waiting for ACK */
+static int A_windowfirst, A_windowlast;    /* array indexes of the first/last packet awaiting ACK */
+static int A_windowcount;                /* the number of packets currently awaiting an ACK */
 static int A_nextseqnum;               /* the next sequence number to be used by the sender */
 
 /* called from layer 5 (application layer), passed the message to be sent to other side */
@@ -68,7 +68,7 @@ void A_output(struct msg message)
   int i;
 
   /* if not blocked waiting on ACK */
-  if ( windowcount < WINDOWSIZE) {
+  if ( A_windowcount < WINDOWSIZE) {
     if (TRACE > 1)
       printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
 
@@ -81,9 +81,9 @@ void A_output(struct msg message)
 
     /* put packet in window buffer */
     /* windowlast will always be 0 for alternating bit; but not for GoBackN */
-    windowlast = (windowlast + 1) % WINDOWSIZE; 
-    buffer[windowlast] = sendpkt;
-    windowcount++;
+    A_windowlast = (A_windowlast + 1) % WINDOWSIZE; 
+    A_buffer[A_windowlast] = sendpkt;
+    A_windowcount++;
 
     /* send out packet */
     if (TRACE > 0)
@@ -91,7 +91,7 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
-    if (windowcount == 1)
+    if (A_windowcount == 1)
       starttimer(A,RTT);
 
     /* get next sequence number, wrap back to 0 */
@@ -121,9 +121,9 @@ void A_input(struct pkt packet)
     total_ACKs_received++;
 
     /* check if new ACK or duplicate */
-    if (windowcount != 0) {
-          int seqfirst = buffer[windowfirst].seqnum;
-          int seqlast = buffer[windowlast].seqnum;
+    if (A_windowcount != 0) {
+          int seqfirst = A_buffer[A_windowfirst].seqnum;
+          int seqlast = A_buffer[A_windowlast].seqnum;
           /* check case when seqnum has and hasn't wrapped */
           if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
               ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
@@ -140,15 +140,15 @@ void A_input(struct pkt packet)
               ackcount = SEQSPACE - seqfirst + packet.acknum;
 
 	    /* slide window by the number of packets ACKed */
-            windowfirst = (windowfirst + ackcount) % WINDOWSIZE;
+            A_windowfirst = (A_windowfirst + ackcount) % WINDOWSIZE;
 
             /* delete the acked packets from window buffer */
             for (i=0; i<ackcount; i++)
-              windowcount--;
+              A_windowcount--;
 
 	    /* start timer again if there are still more unacked packets in window */
             stoptimer(A);
-            if (windowcount > 0)
+            if (A_windowcount > 0)
               starttimer(A, RTT);
 
           }
@@ -170,12 +170,12 @@ void A_timerinterrupt(void)
   if (TRACE > 0)
     printf("----A: time out,resend packets!\n");
 
-  for(i=0; i<windowcount; i++) {
+  for(i=0; i<A_windowcount; i++) {
 
     if (TRACE > 0)
-      printf ("---A: resending packet %d\n", (buffer[(windowfirst+i) % WINDOWSIZE]).seqnum);
+      printf ("---A: resending packet %d\n", (A_buffer[(A_windowfirst+i) % WINDOWSIZE]).seqnum);
 
-    tolayer3(A,buffer[(windowfirst+i) % WINDOWSIZE]);
+    tolayer3(A, A_buffer[(A_windowfirst+i) % WINDOWSIZE]);
     packets_resent++;
     if (i==0) starttimer(A,RTT);
   }
@@ -189,12 +189,12 @@ void A_init(void)
 {
   /* initialise A's window, buffer and sequence number */
   A_nextseqnum = 0;  /* A starts with seq num 0, do not change this */
-  windowfirst = 0;
-  windowlast = -1;   /* windowlast is where the last packet sent is stored.  
+  A_windowfirst = 0;
+  A_windowlast = -1;   /* windowlast is where the last packet sent is stored.  
 		     new packets are placed in winlast + 1 
 		     so initially this is set to -1
 		   */
-  windowcount = 0;
+  A_windowcount = 0;
 }
 
 
