@@ -201,7 +201,9 @@ void A_init(void)
 
 /********* Receiver (B)  variables and procedures ************/
 
-static int expectedseqnum; /* the sequence number expected next by the receiver */
+static struct pkt B_buffer[WINDOWSIZE];  /* array for storing received packets before sending to application*/
+static int B_windowfirst, A_windowlast;    /* array indexes of the first/last packet in buffer */
+static int B_windowcount;                /* the number of packets buffered */
 static int B_nextseqnum;   /* the sequence number for the next packets sent by B */
 
 
