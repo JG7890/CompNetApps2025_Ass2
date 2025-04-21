@@ -202,7 +202,7 @@ void A_init(void)
 /********* Receiver (B)  variables and procedures ************/
 
 static struct pkt B_buffer[WINDOWSIZE];  /* array for storing received packets before sending to application*/
-static int B_windowfirst, B_windowlast;    /* array indexes of the first/last packet in buffer */
+static int B_windowfirst;    /* array indexes of the first/last packet in buffer */
 static int B_windowcount;                /* the number of packets buffered */
 static int expectedseqnum;
 
@@ -219,7 +219,7 @@ void B_input(struct pkt packet)
       printf("----B: packet %d is correctly received, send ACK!\n",packet.seqnum);
     packets_received++;
 
-    /* buffer packet / send packets to application and slide window */
+    /* if within window and not already buffered, buffer packet / send packets to application and slide window */
 
     B_buffer[] = packet;
     B_windowcount++;
@@ -254,7 +254,6 @@ void B_input(struct pkt packet)
 void B_init(void)
 {
   B_windowfirst = 0;
-  B_windowlast = -1;
   B_windowcount = 0;
   expectedseqnum = 0;
 }
