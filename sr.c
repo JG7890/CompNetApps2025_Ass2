@@ -24,7 +24,7 @@
 
 #define RTT  16.0       /* round trip time.  MUST BE SET TO 16.0 when submitting assignment */
 #define WINDOWSIZE 6    /* the maximum number of buffered unacked packet */
-#define SEQSPACE 7      /* the min sequence space for GBN must be at least windowsize + 1 */
+#define SEQSPACE 12      /* the min sequence space for SR must be at least windowsize * 2 */
 #define NOTINUSE (-1)   /* used to fill header fields that are not being used */
 
 /* generic procedure to compute the checksum of a packet.  Used by both sender and receiver  
@@ -204,6 +204,7 @@ void A_init(void)
 static struct pkt B_buffer[WINDOWSIZE];  /* array for storing received packets before sending to application*/
 static int B_windowfirst, B_windowlast;    /* array indexes of the first/last packet in buffer */
 static int B_windowcount;                /* the number of packets buffered */
+static int expectedseqnum;
 
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
@@ -218,20 +219,22 @@ void B_input(struct pkt packet)
       printf("----B: packet %d is correctly received, send ACK!\n",packet.seqnum);
     packets_received++;
 
-    /* deliver to receiving application */
-    tolayer5(B, packet.payload);
+    /* buffer packet / send packets to application and slide window */
+
+    B_buffer[] = packet;
+    B_windowcount++;
+
+
 
     /* send an ACK for the received packet */
     sendpkt.acknum = packet.seqnum;
-
-    /* create packet */
     sendpkt.seqnum = sendpkt.acknum;
       
     /* we don't have any data to send.  fill payload with 0's */
     for ( i=0; i<20 ; i++ ) 
       sendpkt.payload[i] = '0';  
 
-    /* computer checksum */
+    /* compute checksum */
     sendpkt.checksum = ComputeChecksum(sendpkt); 
 
     /* send out packet */
@@ -250,7 +253,10 @@ void B_input(struct pkt packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init(void)
 {
-
+  B_windowfirst = 0;
+  B_windowlast = -1;
+  B_windowcount = 0;
+  expectedseqnum = 0;
 }
 
 /******************************************************************************
