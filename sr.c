@@ -204,7 +204,7 @@ void A_init(void)
 static struct pkt B_buffer[WINDOWSIZE];  /* array for storing received packets before sending to application*/
 static int B_windowfirst;    /* array indexes of the first/last packet in buffer */
 static int B_windowcount;                /* the number of packets buffered */
-static int expectedseqnum;
+static int B_expectedseqnum; /* sequence number associated with packet to go in windowfirst buffer slot*/
 
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
@@ -219,10 +219,20 @@ void B_input(struct pkt packet)
       printf("----B: packet %d is correctly received, send ACK!\n",packet.seqnum);
     packets_received++;
 
-    /* if within window and not already buffered, buffer packet / send packets to application and slide window */
+    /* if within window, buffer packet / send packets to application and slide window */
 
-    B_buffer[] = packet;
-    B_windowcount++;
+    int seqfirst = B_expectedseqnum;
+    int seqlast = (seqfirst + (WINDOWSIZE - 1)) % SEQSPACE;
+    /* check case when seqnum has and hasn't wrapped */
+    if (((seqfirst <= seqlast) && (packet.seqnum >= seqfirst && packet.seqnum <= seqlast)) ||
+        ((seqfirst > seqlast) && (packet.seqnum >= seqfirst || packet.seqnum <= seqlast))) {
+
+        int seqdistance = (packet.seqnum - B_expectedseqnum + SEQSPACE) % SEQSPACE;
+        int bufferIndex = (B_windowfirst + seqdistance) % WINDOWSIZE;
+        B_buffer[bufferIndex] = packet;
+        B_windowcount++;
+    }
+
 
 
 
@@ -255,7 +265,13 @@ void B_init(void)
 {
   B_windowfirst = 0;
   B_windowcount = 0;
-  expectedseqnum = 0;
+  B_expectedseqnum = 0;
+
+  struct pkt nullpkt;
+  nullpkt.seqnum = NOTINUSE;
+  for (int i = 0; i < WINDOWSIZE; i++){
+    B_buffer[i] = nullpkt;
+  }
 }
 
 /******************************************************************************
