@@ -231,9 +231,22 @@ void B_input(struct pkt packet)
         int bufferIndex = (B_windowfirst + seqdistance) % WINDOWSIZE;
         B_buffer[bufferIndex] = packet;
         B_windowcount++;
+
+        /* Slide window for as many packets from windowstart until null packet */
+        int index = B_windowfirst;
+        for (int i = 0; i < WINDOWSIZE; i++){
+          if (B_buffer[index].seqnum != -1){
+            tolayer5(B, B_buffer[index].payload);
+            B_windowfirst = (B_windowfirst + 1) % WINDOWSIZE;
+            B_expectedseqnum = (B_expectedseqnum + 1) % SEQSPACE;
+            B_windowcount--;
+          } else {
+            break;
+          }
+
+          int index = (index + 1) % WINDOWSIZE;
+        }
     }
-
-
 
 
     /* send an ACK for the received packet */
