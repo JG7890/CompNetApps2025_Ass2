@@ -131,6 +131,7 @@ void A_input(struct pkt packet)
 
             int seqDistance;
             int bufferIndex;
+            int currwindowcount;
             int didWindowSlide = 0;
 
             /* packet is a new ACK */
@@ -146,7 +147,8 @@ void A_input(struct pkt packet)
 
             /* Slide window for as many ACKed packets from windowstart until a packet that is still awaiting ACK */
             index = A_windowfirst;
-            for (i = 0; i < A_windowcount; i++){
+            currwindowcount = A_windowcount;
+            for (i = 0; i < currwindowcount; i++){
               if (A_buffer[index].seqnum == NOTINUSE){
                 A_windowfirst = (A_windowfirst + 1) % WINDOWSIZE;
                 A_windowcount--;
@@ -186,6 +188,10 @@ void A_timerinterrupt(void)
   for(i=0; i<1; i++) {
     if (TRACE > 0)
       printf ("---A: resending packet %d\n", (A_buffer[(A_windowfirst+i) % WINDOWSIZE]).seqnum);
+
+      if (A_buffer[A_windowfirst].seqnum == -1){
+        exit(EXIT_FAILURE);
+      }
 
     tolayer3(A, A_buffer[(A_windowfirst+i) % WINDOWSIZE]);
     packets_resent++;
@@ -232,6 +238,8 @@ void B_input(struct pkt packet)
   if  (!IsCorrupted(packet) ) {
     if (TRACE > 0)
       printf("----B: packet %d is correctly received, send ACK!\n",packet.seqnum);
+
+    
     packets_received++;
 
     /* if within window, buffer packet / send packets to application and slide window */
