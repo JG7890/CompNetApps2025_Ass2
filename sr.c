@@ -287,11 +287,6 @@ void B_input(struct pkt packet)
     /* send out packet */
     tolayer3 (B, sendpkt);
   }
-  else {
-  /* packet is corrupted or out of order */
-    if (TRACE > 0) 
-      printf("----B: packet corrupted or not expected sequence number, resend ACK!\n");
-  }
 
   
 }
