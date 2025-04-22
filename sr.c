@@ -189,9 +189,6 @@ void A_timerinterrupt(void)
     if (TRACE > 0)
       printf ("---A: resending packet %d\n", (A_buffer[(A_windowfirst+i) % WINDOWSIZE]).seqnum);
 
-      if (A_buffer[A_windowfirst].seqnum == -1){
-        exit(EXIT_FAILURE);
-      }
 
     tolayer3(A, A_buffer[(A_windowfirst+i) % WINDOWSIZE]);
     packets_resent++;
