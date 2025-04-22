@@ -175,7 +175,7 @@ void A_timerinterrupt(void)
   if (TRACE > 0)
     printf("----A: time out,resend packets!\n");
 
-  for(i=0; i<A_windowcount; i++) {
+  for(i=0; i<1; i++) {
 
     if (TRACE > 0)
       printf ("---A: resending packet %d\n", (A_buffer[(A_windowfirst+i) % WINDOWSIZE]).seqnum);
