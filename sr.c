@@ -128,7 +128,9 @@ void A_input(struct pkt packet)
           if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
               ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
 
+            int seqDistance;
             int bufferIndex;
+            int didWindowSlide = 0;
 
             /* packet is a new ACK */
             if (TRACE > 0)
@@ -137,7 +139,8 @@ void A_input(struct pkt packet)
 
             /* selective acknowledgement - ACK the packet corresponding to the ack number.
             Mark ACKed packet with sequence number NOTINUSE (-1). */
-            bufferIndex = A_windowfirst + (packet.acknum - seqfirst);
+            seqDistance = (packet.acknum - seqfirst + SEQSPACE) % SEQSPACE;
+            bufferIndex = (A_windowfirst + seqDistance) % WINDOWSIZE;
             A_buffer[bufferIndex].seqnum = NOTINUSE;
 
             /* Slide window for as many ACKed packets from windowstart until a packet that is still awaiting ACK */
@@ -146,15 +149,20 @@ void A_input(struct pkt packet)
               if (A_buffer[index].seqnum == NOTINUSE){
                 A_windowfirst = (A_windowfirst + 1) % WINDOWSIZE;
                 A_windowcount--;
+                didWindowSlide = 1;
+              } else {
+                break;
               }
 
               index = (index + 1) % WINDOWSIZE;
             }
 
             /* start timer again if there are still more unacked packets in window */
-            stoptimer(A);
-            if (A_windowcount > 0)
-              starttimer(A, RTT);
+            if (didWindowSlide == 1){
+              stoptimer(A);
+              if (A_windowcount > 0)
+                starttimer(A, RTT);
+            }
 
           }
         }
