@@ -112,6 +112,7 @@ void A_output(struct msg message)
 void A_input(struct pkt packet)
 {
   int i;
+  int index;
 
   /* if received ACK is not corrupted */ 
   if (!IsCorrupted(packet)) {
@@ -127,25 +128,30 @@ void A_input(struct pkt packet)
           if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
               ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
 
+            int bufferIndex;
+
             /* packet is a new ACK */
             if (TRACE > 0)
               printf("----A: ACK %d is not a duplicate\n",packet.acknum);
             new_ACKs++;
 
-            /* selective acknowledgement - ACK the packet corresponding to the ack number */
-            if (packet.acknum >= seqfirst)
-              ackcount = packet.acknum + 1 - seqfirst;
-            else
-              ackcount = SEQSPACE - seqfirst + packet.acknum;
+            /* selective acknowledgement - ACK the packet corresponding to the ack number.
+            Mark ACKed packet with sequence number NOTINUSE (-1). */
+            bufferIndex = A_windowfirst + (packet.acknum - seqfirst);
+            A_buffer[bufferIndex].seqnum = NOTINUSE;
 
-	    /* slide window by the number of packets ACKed */
-            A_windowfirst = (A_windowfirst + ackcount) % WINDOWSIZE;
+            /* Slide window for as many ACKed packets from windowstart until a packet that is still awaiting ACK */
+            index = A_windowfirst;
+            for (i = 0; i < WINDOWSIZE; i++){
+              if (A_buffer[index].seqnum == NOTINUSE){
+                A_windowfirst = (A_windowfirst + 1) % WINDOWSIZE;
+                A_windowcount--;
+              }
 
-            /* delete the acked packets from window buffer */
-            for (i=0; i<ackcount; i++)
-              A_windowcount--;
+              index = (index + 1) % WINDOWSIZE;
+            }
 
-	    /* start timer again if there are still more unacked packets in window */
+            /* start timer again if there are still more unacked packets in window */
             stoptimer(A);
             if (A_windowcount > 0)
               starttimer(A, RTT);
