@@ -111,7 +111,6 @@ void A_output(struct msg message)
 */
 void A_input(struct pkt packet)
 {
-  int ackcount = 0;
   int i;
 
   /* if received ACK is not corrupted */ 
@@ -133,7 +132,7 @@ void A_input(struct pkt packet)
               printf("----A: ACK %d is not a duplicate\n",packet.acknum);
             new_ACKs++;
 
-            /* cumulative acknowledgement - determine how many packets are ACKed */
+            /* selective acknowledgement - ACK the packet corresponding to the ack number */
             if (packet.acknum >= seqfirst)
               ackcount = packet.acknum + 1 - seqfirst;
             else
