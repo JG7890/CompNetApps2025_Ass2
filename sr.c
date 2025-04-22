@@ -91,6 +91,7 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
+    /*printf("windowcount %d\n", A_windowcount); */
     if (A_windowcount == 1)
       starttimer(A,RTT);
 
@@ -145,7 +146,7 @@ void A_input(struct pkt packet)
 
             /* Slide window for as many ACKed packets from windowstart until a packet that is still awaiting ACK */
             index = A_windowfirst;
-            for (i = 0; i < WINDOWSIZE; i++){
+            for (i = 0; i < A_windowcount; i++){
               if (A_buffer[index].seqnum == NOTINUSE){
                 A_windowfirst = (A_windowfirst + 1) % WINDOWSIZE;
                 A_windowcount--;
@@ -179,12 +180,10 @@ void A_input(struct pkt packet)
 void A_timerinterrupt(void)
 {
   int i;
-
   if (TRACE > 0)
     printf("----A: time out,resend packets!\n");
 
   for(i=0; i<1; i++) {
-
     if (TRACE > 0)
       printf ("---A: resending packet %d\n", (A_buffer[(A_windowfirst+i) % WINDOWSIZE]).seqnum);
 
