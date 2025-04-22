@@ -212,6 +212,9 @@ void B_input(struct pkt packet)
 {
   struct pkt sendpkt;
   int i;
+  int seqfirst;
+  int seqlast;
+  int index;
 
   /* if not corrupted and received packet is in order */
   if  (!IsCorrupted(packet) ) {
@@ -220,9 +223,9 @@ void B_input(struct pkt packet)
     packets_received++;
 
     /* if within window, buffer packet / send packets to application and slide window */
-
-    int seqfirst = B_expectedseqnum;
-    int seqlast = (seqfirst + (WINDOWSIZE - 1)) % SEQSPACE;
+    
+    seqfirst = B_expectedseqnum;
+    seqlast = (seqfirst + (WINDOWSIZE - 1)) % SEQSPACE;
     /* check case when seqnum has and hasn't wrapped */
     if (((seqfirst <= seqlast) && (packet.seqnum >= seqfirst && packet.seqnum <= seqlast)) ||
         ((seqfirst > seqlast) && (packet.seqnum >= seqfirst || packet.seqnum <= seqlast))) {
@@ -233,10 +236,14 @@ void B_input(struct pkt packet)
         B_windowcount++;
 
         /* Slide window for as many packets from windowstart until null packet */
-        int index = B_windowfirst;
-        for (int i = 0; i < WINDOWSIZE; i++){
-          if (B_buffer[index].seqnum != -1){
+        index = B_windowfirst;
+        for (i = 0; i < WINDOWSIZE; i++){
+          if (B_buffer[index].seqnum != NOTINUSE){
             tolayer5(B, B_buffer[index].payload);
+
+            /* Packet has been delivered. Mark this as deleted from the buffer. */
+            B_buffer[index].seqnum = NOTINUSE;
+
             B_windowfirst = (B_windowfirst + 1) % WINDOWSIZE;
             B_expectedseqnum = (B_expectedseqnum + 1) % SEQSPACE;
             B_windowcount--;
@@ -244,7 +251,7 @@ void B_input(struct pkt packet)
             break;
           }
 
-          int index = (index + 1) % WINDOWSIZE;
+          index = (index + 1) % WINDOWSIZE;
         }
     }
 
@@ -276,13 +283,15 @@ void B_input(struct pkt packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init(void)
 {
+  struct pkt nullpkt;
+  int i;
+
   B_windowfirst = 0;
   B_windowcount = 0;
   B_expectedseqnum = 0;
-
-  struct pkt nullpkt;
+  
   nullpkt.seqnum = NOTINUSE;
-  for (int i = 0; i < WINDOWSIZE; i++){
+  for (i = 0; i < WINDOWSIZE; i++){
     B_buffer[i] = nullpkt;
   }
 }
