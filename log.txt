@@ -1,0 +1,113 @@
+commit 6667e492db5cef29c7c74d5aadd89819ece22ff7
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 19:20:20 2025 +0930
+
+    Removed else clause for receiver which processes corrupted packets. SR receiver simply ignores corrupted packets unlike GBN.
+
+commit a4172b2ce8c10c2b879f0e75455ace826f239de9
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 19:01:19 2025 +0930
+
+    Removed test code segment
+
+commit 68660f5a6864df5ced1a134c097851743f68c303
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 18:58:33 2025 +0930
+
+    Fixed another code bug. Sender window now slides at max to the intended maximum distance.
+
+commit 9dba0fc852c578600f2a79fd240d5e372361aa29
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 17:07:36 2025 +0930
+
+    added gbn for oracle submission
+
+commit efb224c6c7381fc06c3e42d3b982c9a9f384e0fa
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 16:33:31 2025 +0930
+
+    Fixed issue in for loop logic. Now A only slides window as much as the size of the window and does not go past.
+
+commit ef556cbe77907786772af1a2b3567b352b4c846c
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 16:01:52 2025 +0930
+
+    fixed bug with wraparound behaviour for buffer index, tested and no longer segfaults
+
+commit a8467e908c20f5a31b13444890ed6736725662cb
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 15:19:03 2025 +0930
+
+    Implemented A timer interrupt to resend only oldest packet on timeout.
+
+commit 0350ce7c374d247c0e53de1206d3ec5e2a13af0f
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 15:13:49 2025 +0930
+
+    Implemented A_input() to deal with and interpret ACKs properly for selective repeat. ACKs a packet by setting its seqnum to -1, and window sliding occurs if consecutive ACKed packets from the start of window.
+
+commit ad52bc0ce5bbadcbe6f82ea9b4cdbcee8dbc1b25
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 14:44:11 2025 +0930
+
+    Started sender implementation. Removed ackcount variable, as ACKs are now selective and not cumulative.
+
+commit bb1b10869b196dde61ef1372d6b27daae5c2143a
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 11:08:35 2025 +0930
+
+    Corrected the #include gbn.h to #include sr.h
+
+commit b977d3310d3f1e007b14f446663e239b8a6c1480
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Tue Apr 22 10:51:16 2025 +0930
+
+    Fixed compile pedantic formatting issues. Also fixed bug in receiver, packets that are delivered are deleted from the buffer by setting its sequence number to -1.
+
+commit 07ccf2c8560a54ae68042c9c23647fb6596f593d
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Mon Apr 21 11:36:02 2025 +0930
+
+    part 2 of receiver buffering done. slides window and delivers packets to application (layer 5) if it can do so.
+
+commit 4a4a2043c04cbe725bbe58c31177f315fa9f1149
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Mon Apr 21 11:20:41 2025 +0930
+
+    first part of receiver buffering done. checks if received packet is within window based on sequence numbers, and buffers packet if so. Also initialise buffer to packets with sequence number of -1.
+
+commit c173e8420cf01ca6c0ef58ab35eebbf4507aa013
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Mon Apr 21 10:33:16 2025 +0930
+
+    Removed B_windowlast, unnecessary as full window size can be used for buffer at all times in SR
+
+commit e10bd8a5d98ba1c0c820480b7bff4b028ab1360e
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Mon Apr 21 10:25:22 2025 +0930
+
+    Added back expectedseqnum variable to hold the sequence num of the first window slot, the packet expected to be able to slide window over
+
+commit 4acf4922f7eddb4246ceaa0c5cd3bc49fa9bdc44
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Sat Apr 19 17:32:55 2025 +0930
+
+    Receiver only sends back a selective ACK if the packet was not corrupted. If it was corrupted, do nothing. If it was not corrupted, send ACK for that packet, whether it was newly received or already buffered, or already delivered (out of window). Also, sequence number for ACK packets is set to the acknum.
+
+commit c17b39274827fb37482ee82aee638e209f7959d6
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Sat Apr 19 17:14:35 2025 +0930
+
+    removed B_nextseqnum as B will be sending selective ACKs and can simply use the ACK number as its sequence number.
+
+commit eae3abf0d84acff3badf9747f22f6a05e453bbf5
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Sat Apr 19 16:56:46 2025 +0930
+
+    prepended A_ to buffer and window variable names for sender, as the receiver (B) should also have its own buffer in SR
+
+commit 8da715a7ec945caac2bcdb1124ce1dfbf36903d0
+Author: JG7890 <a1887235@adelaide.edu.au>
+Date:   Wed Apr 16 11:48:32 2025 +0930
+
+    First commit, copied code to sr.h/sr.c
